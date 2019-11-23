@@ -1,0 +1,10 @@
+CONCEPT 1) Circular dependency problem
+Cause:
+Explained in the ERROR1 topic in errors.txt.
+
+Solution:
+1) @Lazy annotation helps to create the respective beans.
+It can be applied at Either field level inside the constructor
+
+2) @PostConstruct is another way we can remove circular dependency
+________________________________________________________________________________________________________________________

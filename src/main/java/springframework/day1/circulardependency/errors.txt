@@ -1,0 +1,37 @@
+ERROR 1) unresolvable circular reference
+
+When we have two different classes defined in such a manner that one class is using other class reference and vice-versa
+and are also having a parameterized constructor to set the values in their refference respectively.
+When spring tries to create the bean of the class it will get this error as it will go to class A constructor then it
+will find B in the constructor and so it will try to create the bean of B first and so on.
+
+Example:
+@Component
+public class A {
+    private B b;
+
+    public A(B b) {
+        this.b = b;
+    }
+}
+
+@Component
+public class B {
+    private A a;
+
+    public B(A a) {
+        this.a = a;
+    }
+}
+
+public class Client {
+    public static void main(String[] args) {
+        ApplicationContext injector = new AnnotationConfigApplicationContext("springframework.day1.circulardependency");
+        A a = injector.getBean(A.class);
+    }
+}
+
+On running the Main method in Client we will get the above mentioned BeanCurrentlyInCreationException
+Caused by: org.springframework.beans.factory.BeanCurrentlyInCreationException: Error creating bean with name 'a':
+Requested bean is currently in creation: Is there an unresolvable circular reference?
+________________________________________________________________________________________________________________________
