@@ -1,158 +1,67 @@
-CONCEPT 1)  When we have a single constructor in the service class
-then spring uses it to inject the dependency without even defining
-@Autowired annotation.
-But if there is a default constructor mentioned then we need to use @Autowired
-at either field level or constructor level so that spring injects the dependency
-automatically.
+CONCEPT 1) NoUniqueBeanDefinitionException
+
+When two classes implements same interface and the reference used in the service class is of the interface then we will
+get this exception when spring tries to inject the dependency as spring gets confused to inject which dependency among the
+two present beans of same type.
+
+To solve this exception we have @Qualifier annotation in which we give a string in @Qualifier("english") on class level.
+and when we are using it in the serice we will again use the same @Qualifier annotaion with the same
+string "english" which will tell the spring to use the EnglishSpamChecker among the two available beans
+of SpamChecker type.
 Example:
-public class GuestBookServices {
-    private JpaRepository jpaRepository;
-    private SpamChecker spamChecker;
-    private RateLimiter rateLimiter;
-
-    public GuestBookServices(JpaRepository jpaRepository, SpamChecker spamChecker, RateLimiter rateLimiter) {
-        this.jpaRepository = jpaRepository;
-        this.spamChecker = spamChecker;
-        this.rateLimiter = rateLimiter;
-    }
-
-    public void someMethod(){
-     System.out.println(this.spamChecker.isSpan("some content"));
-    }
-}
-The above code works fine when we try getting the bean from spring
-and use it to call the someMethod() in guestBookService
-class Client{
-    public static void main(String[] args){
-        ApplicationContext injector = new AnnotationConfigApplicationContext("base.package.of.project");
-        GuestBookService guestBookService = injector.getBean(GuestBookServeice.class);
-        guestBookService.someMethod();
-    }
-}
-
-But if we write a default constructor in the GuestBookService class
-then we will get error when we will try to call the someMethod() in GuestBookService class.
-This time spring uses the default constructor while creating the bean for service class as a result it will
-fail to inject the dependency of spamChecker by default .
-Hence to overcome this we need to do the DI by telling spring explicitly by any of the spring DI methods.
-________________________________________________________________________________________________________________________
-CONCEPT 2) Ways to do Dependency Injection in Spring:
-
-1) Field level DI
-When we write @Autowired above the fields of the class.
-Example:
-public class GuestBookServices {
-    @Autowired
-    private JpaRepository jpaRepository;
-    @Autowired
-    private SpamChecker spamChecker;
-    @Autowired
-    private RateLimiter rateLimiter;
-}
-
-2) Constructor level DI
-When we declare @Autowired above the constructor.
-Example:
-public class GuestBookServices {
-    private JpaRepository jpaRepository;
-    private SpamChecker spamChecker;
-    private RateLimiter rateLimiter;
-
-    @Autowired
-    public GuestBookServices(JpaRepository jpaRepository, SpamChecker spamChecker, RateLimiter rateLimiter) {
-        this.jpaRepository = jpaRepository;
-        this.spamChecker = spamChecker;
-        this.rateLimiter = rateLimiter;
-    }
-}
-
-3) Setter method level DI
-Example:
-public class GuestBookServices {
-    private JpaRepository jpaRepository;
-    private SpamChecker spamChecker;
-    private RateLimiter rateLimiter;
-
-    @Autowired
-    public void setJpaRepository(JpaRepository jpaRepository) {
-        this.jpaRepository = jpaRepository;
-    }
-
-    @Autowired
-    public void setSpamChecker(SpamChecker spamChecker) {
-        this.spamChecker = spamChecker;
-    }
-
-    @Autowired
-    public void setRateLimiter(RateLimiter rateLimiter) {
-        this.rateLimiter = rateLimiter;
-    }
-}
-
-To Be Remembered:
-Constructor dependency Injection is used in most of the cases as we are not considered about the
-total number of fields in the class. We just have to define @Autowired once and our work is done.
-Whereas in case of adding a new field we need to add @Autowired at the field level for every field
-same goes for the setter level DI method.
-________________________________________________________________________________________________________________________
-CONCEPT 3) @Component Annotation
-
-Spring Component annotation is used to denote a class as Component.
-It means that Spring framework will autodetect these classes for dependency injection
-when annotation-based configuration and classpath scanning is used.
-________________________________________________________________________________________________________________________
-CONCEPT 4) @Autowired Annotation
-
-This annotation allows Spring to resolve and inject collaborating beans into your bean.
-________________________________________________________________________________________________________________________
-CONCEPT 5) @Autowired Annotation with (required = true/false)
-
-If we have a Service class with 3 properties like :
-SpamChecker
-RateLimiter
-JpaRepository
-
-and we have a method create which uses SpamChecker isSpam() method and RateLimiter isRateLimited() but no
-method from JpaRepository then if we dont write @Autowired on JpaRepository property/field then during creation
-of the contatiner by spring we will get error saying
-
-No qualifying bean of type 'springframework.day1.JpaRepository' available:
-expected at least 1 bean which qualifies as autowire candidate.
-Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}
-
-Which means even if we dont want spring to inject JpaRepository dependency by default it will try to
-inject the dependency.But if we remove @Component from JpaRepository Spring will unable to create the bean
-but again we will be unable to run the service class method.So to overcome from this we have
-@Autowired(required=false) which we can use on the field in the service class. So that spring container ignores creating
-the bean for JpaRepository and still we can use the method in our service class.
-
-This means if @Autowired(required=false) is written on JpaRepository property in service class then:
-If spring has a bean for JpaRepository it will execute the create method in service class and even if the
-spring container has no bean for JpaRepository it will execute the create method successfully.
-Example
 @Component
 public class GuestBookServices {
-
-    @Autowired(required = false)
-    private JpaRepository jpaRepository;
     @Autowired
+    @Qualifier("english")
     private SpamChecker spamChecker;
     @Autowired
+    private JpaRepository jpaRepository;
+    @Autowired
     private RateLimiter rateLimiter;
+}
 
-    public void create(GuestBookEntry guestbookEntry, String ipAddress){
-         if (spamChecker.isSpam(guestbookEntry.getContent())) {
-             throw new RuntimeException("Spam words in content");
-         }
-         if (rateLimiter.isRateLimited(ipAddress)) {
-             throw new RuntimeException("Ip Address is rate limited");
-         }
-         //Comment out below line to see the use of required property of @Autowired annotation
-         //jpaRepository.save(guestbookEntry);
+@Component
+@Qualifier("english")
+public class EnglishSpamChecker implements SpamChecker{
+    Set<String> spamWords;
+}
+
+@Component
+@Qualifier("french")
+public class FrenchSpamChecker implements SpamChecker {
+    Set<String> spamWords;
+}
+________________________________________________________________________________________________________________________
+CONCEPT 2) Decorator pattern
+When we have some additional information on which we can distinguish two similar type of objects then we use this
+decorator pattern where we create a SpamCheckerFactory class which returns the correct object based on some logic
+through a method.
+
+for example we have SpamCheckerFactory class which has a method getSpamChecker() method that returns object of
+SpamChecker type (either EnglishSpamChecker or FrenchSpamChecker) based on the language of the content.
+Example:
+@Component
+public class SpamCheckerFactory {
+
+    @Autowired
+    @Qualifier("english")
+    private SpamChecker englishSpamChecker;
+    @Autowired
+    @Qualifier("french")
+    private SpamChecker frenchSpamChecker;
+
+    public SpamChecker getSpamChecker(Language language){
+        if(language==Language.FRENCH)
+            return this.frenchSpamChecker;
+        else
+            return this.englishSpamChecker;
     }
 }
 
-Here , jpaRepository reference is null still the bean for GuestBookService will be created in spring container
-and we can successfully call the create().
+In the GuestBookService class we can define a method with @Autowired annotation so that it maps the
+spamChecker reference according to the Language of the content.
+@Autowired
+    public void getSpamChecker(SpamCheckerFactory spamCheckerFactory){
+        this.spamChecker = spamCheckerFactory.getSpamChecker(Language.ENGLISH);
+    }
 ________________________________________________________________________________________________________________________
-CONCEPT 6)

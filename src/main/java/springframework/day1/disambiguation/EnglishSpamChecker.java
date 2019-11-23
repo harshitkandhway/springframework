@@ -1,5 +1,6 @@
 package springframework.day1.disambiguation;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -8,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Component
+@Qualifier("english")
 public class EnglishSpamChecker implements SpamChecker{
     Set<String> spamWords;
 
@@ -23,6 +25,11 @@ public class EnglishSpamChecker implements SpamChecker{
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean supports(Language language) {
+        return language==Language.ENGLISH;
     }
 
 }
